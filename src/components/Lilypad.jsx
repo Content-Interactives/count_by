@@ -4,7 +4,7 @@ const Lilypad = () => {
   return (
     // Lilypad Body
     <div style={{
-        width: '80px',
+        width: '70px',
         height: '10px',
         backgroundColor: '#4da85d',
         borderRadius: '50% 50% 50% 50%',

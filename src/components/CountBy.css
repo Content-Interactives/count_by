@@ -1,0 +1,18 @@
+@keyframes shakeAnimation {
+    0%, 100% {
+        transform: translateX(0);
+        background-color: green-200;
+    }
+    25% {
+        transform: translateX(-5px);
+        background-color: green-200;
+    }
+    75% {
+        transform: translateX(5px);
+        background-color: green-200;
+    }
+}
+
+.shake-animation {
+    animation: shakeAnimation 0.2s ease-in-out forwards;
+}
