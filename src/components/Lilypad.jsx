@@ -6,7 +6,7 @@ const Lilypad = () => {
     <div style={{
         width: '70px',
         height: '10px',
-        backgroundColor: '#4da85d',
+        backgroundColor: '#0d612c',
         borderRadius: '50% 50% 50% 50%',
     }}>
       {/* Lilypad Cut */}

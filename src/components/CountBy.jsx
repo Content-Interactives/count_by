@@ -41,9 +41,25 @@ const CountBy = () => {
     const [showCountAndButtons, setShowCountAndButtons] = useState(true);
     const [buttonsAnimating, setButtonsAnimating] = useState('normal');
     const [shakingButtonIndex, setShakingButtonIndex] = useState(null);
+    const [isJumping, setIsJumping] = useState(false);
 
     // Refs for lilypad positions
     const lilypadRefs = useRef([]);
+
+    // Helper function to calculate frog position for a given lilypad
+    const calculateFrogPosition = (targetPosition) => {
+        if (lilypadRefs.current[targetPosition]) {
+            const lilypadElement = lilypadRefs.current[targetPosition];
+            const lilypadRect = lilypadElement.getBoundingClientRect();
+            const container = lilypadElement.parentElement;
+            const containerRect = container.getBoundingClientRect();
+            
+            if (containerRect) {
+                return lilypadRect.left - containerRect.left + (lilypadRect.width / 2);
+            }
+        }
+        return frogLeft;
+    };
 
     // Update frog position based on lilypad positions
     useEffect(() => {
@@ -67,85 +83,113 @@ const CountBy = () => {
         return () => window.removeEventListener('resize', updateFrogPosition);
     }, [frogPosition]);
 
+    // Update frog position when game resets (without animation)
+    useEffect(() => {
+        if (frogPosition === 0 && !isJumping) {
+            const newFrogLeft = calculateFrogPosition(0);
+            setFrogLeft(newFrogLeft);
+        }
+    }, [lilypads]); // Update when lilypads change (new game)
+
     // Functions
     const handleButtonClick = (value) => {
         if (lilypads[frogPosition] + count === value) {
             const newPosition = frogPosition + 1;
-            setFrogPosition(newPosition);
             
-            // Check if frog reached the final lilypad
-            if (newPosition === lilypads.length - 1) {
-                // Fade out count and buttons, show good job message
-                setShowCountAndButtons(false);
-                
-                setTimeout(() => {
-                    setShowGoodJob(true);
-                    
-                    // Trigger confetti for completing the sequence
-                    confetti({
-                        particleCount: 100,
-                        spread: 70,
-                        origin: { y: 0.4 }
-                    });
-                }, 300); // Small delay for fade out to complete
-                
-                // Reset and randomize after 3 seconds
-                setTimeout(() => {
-                    // Fade out good job message
-                    setShowGoodJob(false);
-                    
-                    // Reset frog position
-                    setFrogPosition(0);
-                    
-                    // Randomize count (2, 5, or 10)
-                    const countOptions = [2, 5, 10, 100];
-                    const newCount = countOptions[Math.floor(Math.random() * countOptions.length)];
-                    setCount(newCount);
-                    
-                    // Generate new lilypad values based on new count
-                    const newLilypads = generateLilypadValues(newCount);
-                    setLilypads(newLilypads);
-                    
-                    // Generate new button values for the first lilypad
-                    const correctAnswer = newLilypads[0] + newCount;
-                    const incorrectValue1 = correctAnswer + newCount;
-                    const incorrectValue2 = correctAnswer - newCount;
-                    const allValues = [correctAnswer, incorrectValue1, incorrectValue2];
-                    const shuffledValues = allValues.sort(() => Math.random() - 0.5);
-                    setButtonValues(shuffledValues);
-                    
-                    // Fade count and buttons back in
-                    setTimeout(() => {
-                        setShowCountAndButtons(true);
-                    }, 300);
-                }, 3000);
-                
-            } else {
-                // Regular correct answer - animate buttons
-                setButtonsAnimating('fading-out');
-                
-                // After fade-out completes, update button values and fade back in
-                setTimeout(() => {
-                    // Generate new button values for next lilypad
-                    const correctAnswer = lilypads[newPosition] + count;
-                    
-                    // Generate two incorrect values that are close to the correct answer
-                    const incorrectValue1 = correctAnswer + count; // One count interval higher
-                    const incorrectValue2 = correctAnswer - count; // One count interval lower
-                    
-                    // Randomly shuffle the position of the correct answer among the three buttons
-                    const allValues = [correctAnswer, incorrectValue1, incorrectValue2];
-                    const shuffledValues = allValues.sort(() => Math.random() - 0.5);
-                    
-                    setButtonValues(shuffledValues);
-                    setButtonsAnimating('fading-in');
-                    
-                    // After fade-in completes, return to normal
-                    setTimeout(() => {
-                        setButtonsAnimating('normal');
-                    }, 300); // Wait for fade-in-up animation to complete (0.3s)
-                }, 500); // Wait for fade-out-up animation to complete (0.5s)
+            // Calculate target position for jump
+            const targetFrogLeft = calculateFrogPosition(newPosition);
+            
+            // Set up jump animation with CSS variables
+            const frogElement = document.querySelector('.frog-jump-animation, .transition-all');
+            if (frogElement) {
+                frogElement.style.setProperty('--start-x', `${frogLeft}px`);
+                frogElement.style.setProperty('--end-x', `${targetFrogLeft}px`);
             }
+            
+            // Start jump animation
+            setIsJumping(true);
+            
+            // After jump completes, update position and handle game logic
+            setTimeout(() => {
+                setFrogPosition(newPosition);
+                setFrogLeft(targetFrogLeft);
+                setIsJumping(false);
+                
+                // Check if frog reached the final lilypad
+                if (newPosition === lilypads.length - 1) {
+                    // Fade out count and buttons, show good job message
+                    setShowCountAndButtons(false);
+                    
+                    setTimeout(() => {
+                        setShowGoodJob(true);
+                        
+                        // Trigger confetti for completing the sequence
+                        confetti({
+                            particleCount: 100,
+                            spread: 70,
+                            origin: { y: 0.4 }
+                        });
+                    }, 300); // Small delay for fade out to complete
+                    
+                    // Reset and randomize after 3 seconds
+                    setTimeout(() => {
+                        // Fade out good job message
+                        setShowGoodJob(false);
+                        
+                        // Reset frog position
+                        setFrogPosition(0);
+                        
+                        // Randomize count (2, 5, or 10)
+                        const countOptions = [2, 5, 10, 100];
+                        const newCount = countOptions[Math.floor(Math.random() * countOptions.length)];
+                        setCount(newCount);
+                        
+                        // Generate new lilypad values based on new count
+                        const newLilypads = generateLilypadValues(newCount);
+                        setLilypads(newLilypads);
+                        
+                        // Generate new button values for the first lilypad
+                        const correctAnswer = newLilypads[0] + newCount;
+                        const incorrectValue1 = correctAnswer + newCount;
+                        const incorrectValue2 = correctAnswer - newCount;
+                        const allValues = [correctAnswer, incorrectValue1, incorrectValue2];
+                        const shuffledValues = allValues.sort(() => Math.random() - 0.5);
+                        setButtonValues(shuffledValues);
+                        
+                        // Fade count and buttons back in
+                        setTimeout(() => {
+                            setShowCountAndButtons(true);
+                        }, 300);
+                    }, 3000);
+                    
+                } else {
+                    // Regular correct answer - animate buttons after jump
+                    setButtonsAnimating('fading-out');
+                    
+                    // After fade-out completes, update button values and fade back in
+                    setTimeout(() => {
+                        // Generate new button values for next lilypad
+                        const correctAnswer = lilypads[newPosition] + count;
+                        
+                        // Generate two incorrect values that are close to the correct answer
+                        const incorrectValue1 = correctAnswer + count; // One count interval higher
+                        const incorrectValue2 = correctAnswer - count; // One count interval lower
+                        
+                        // Randomly shuffle the position of the correct answer among the three buttons
+                        const allValues = [correctAnswer, incorrectValue1, incorrectValue2];
+                        const shuffledValues = allValues.sort(() => Math.random() - 0.5);
+                        
+                        setButtonValues(shuffledValues);
+                        setButtonsAnimating('fading-in');
+                        
+                        // After fade-in completes, return to normal
+                        setTimeout(() => {
+                            setButtonsAnimating('normal');
+                        }, 300); // Wait for fade-in-up animation to complete (0.3s)
+                    }, 500); // Wait for fade-out-up animation to complete (0.5s)
+                }
+            }, 800); // Wait for jump animation to complete (now 0.8s)
+            
         } else {
             // Incorrect answer - shake the clicked button
             const buttonIndex = buttonValues.findIndex(buttonValue => buttonValue === value);
@@ -167,7 +211,7 @@ const CountBy = () => {
         >
             {/* Intro Text */}
             <div className='text-center text-sm text-gray-500 p-5'>
-                Skipper the frog needs to get to the end of the pond! Help him by clicking the right numbers by counting by 2's, 5's, or 10's.
+                Skipper the frog needs to get to the end of the pond! Help him by clicking the right numbers by counting by 2's, 5's, 10's, or 100's.
             </div>
 
             {/* Pond Water BG */}
@@ -177,10 +221,16 @@ const CountBy = () => {
             <div className='absolute bottom-[18%] w-[100%] h-[200px] flex justify-between items-center'>
                 {/* Frog */}
                 <div 
-                    className='absolute bottom-[15%] h-[200px] flex justify-center items-center transition-all duration-500 ease-in-out'
+                    className={`absolute bottom-[15%] h-[200px] flex justify-center items-center ${
+                        isJumping ? 'frog-jump-animation' : 'transition-all duration-500 ease-in-out'
+                    }`}
                     style={{
-                        left: `${frogLeft}px`,
-                        transform: 'translateX(-50%)'
+                        ...(isJumping ? {} : {
+                            left: `${frogLeft}px`,
+                            transform: 'translateX(-50%)'
+                        }),
+                        '--start-x': `${frogLeft}px`,
+                        '--end-x': `${frogLeft}px`
                     }}
                 >
                     <Frog />
@@ -226,30 +276,36 @@ const CountBy = () => {
 
             {/* Buttons and Count */}
             <div className={`absolute bottom-[14%] w-[100%] flex justify-center items-center gap-3 transition-opacity duration-300 ${showCountAndButtons ? 'opacity-100' : 'opacity-0'}`}>
-                <button className={`w-[30%] h-[80px] ml-5 bg-green-200 border border-green-500 border-2 rounded-lg text-3xl font-extrabold text-green-700 flex justify-center items-center hover:bg-green-300 hover:scale-105 hover:shadow-lg transition-all duration-200 active:scale-95 ${
+                <button className={`w-[30%] h-[80px] ml-5 bg-green-200 border border-green-500 border-2 rounded-lg text-3xl font-extrabold text-green-700 flex justify-center items-center ${
+                    shakingButtonIndex === null ? 'hover:bg-green-300 hover:scale-105 hover:shadow-lg transition-all duration-200 active:scale-95' : ''
+                } ${
                     buttonsAnimating === 'fading-out' ? 'fade-out-up-animation' : 
                     buttonsAnimating === 'fading-in' ? 'fade-in-up-animation' : ''
                 } ${shakingButtonIndex === 0 ? 'shake-animation' : ''}`}
                     onClick={() => handleButtonClick(buttonValues[0])}
-                    disabled={!showCountAndButtons || buttonsAnimating !== 'normal' || shakingButtonIndex !== null}
+                    disabled={!showCountAndButtons || buttonsAnimating !== 'normal' || shakingButtonIndex !== null || isJumping}
                 >
                     {buttonValues[0]}
                 </button>
-                <button className={`w-[30%] h-[80px] bg-green-200 border border-green-500 border-2 rounded-lg text-3xl font-extrabold text-green-700 flex justify-center items-center hover:bg-green-300 hover:scale-105 hover:shadow-lg transition-all duration-200 active:scale-95 ${
+                <button className={`w-[30%] h-[80px] bg-green-200 border border-green-500 border-2 rounded-lg text-3xl font-extrabold text-green-700 flex justify-center items-center ${
+                    shakingButtonIndex === null ? 'hover:bg-green-300 hover:scale-105 hover:shadow-lg transition-all duration-200 active:scale-95' : ''
+                } ${
                     buttonsAnimating === 'fading-out' ? 'fade-out-up-animation' : 
                     buttonsAnimating === 'fading-in' ? 'fade-in-up-animation' : ''
                 } ${shakingButtonIndex === 1 ? 'shake-animation' : ''}`}
                     onClick={() => handleButtonClick(buttonValues[1])}
-                    disabled={!showCountAndButtons || buttonsAnimating !== 'normal' || shakingButtonIndex !== null}
+                    disabled={!showCountAndButtons || buttonsAnimating !== 'normal' || shakingButtonIndex !== null || isJumping}
                 >
                     {buttonValues[1]}
                 </button>
-                <button className={`w-[30%] h-[80px] mr-5 bg-green-200 border border-green-500 border-2 rounded-lg text-3xl font-extrabold text-green-700 flex justify-center items-center hover:bg-green-300 hover:scale-105 hover:shadow-lg transition-all duration-200 active:scale-95 ${
+                <button className={`w-[30%] h-[80px] mr-5 bg-green-200 border border-green-500 border-2 rounded-lg text-3xl font-extrabold text-green-700 flex justify-center items-center ${
+                    shakingButtonIndex === null ? 'hover:bg-green-300 hover:scale-105 hover:shadow-lg transition-all duration-200 active:scale-95' : ''
+                } ${
                     buttonsAnimating === 'fading-out' ? 'fade-out-up-animation' : 
                     buttonsAnimating === 'fading-in' ? 'fade-in-up-animation' : ''
                 } ${shakingButtonIndex === 2 ? 'shake-animation' : ''}`}
                     onClick={() => handleButtonClick(buttonValues[2])}
-                    disabled={!showCountAndButtons || buttonsAnimating !== 'normal' || shakingButtonIndex !== null}
+                    disabled={!showCountAndButtons || buttonsAnimating !== 'normal' || shakingButtonIndex !== null || isJumping}
                 >
                     {buttonValues[2]}
                 </button>
@@ -260,7 +316,7 @@ const CountBy = () => {
 
             {/* Good Job Message */}
             <div className={`absolute bottom-[20%] left-0 w-[100%] text-center text-5xl font-extrabold text-green-600 flex justify-center transition-opacity duration-300 ${showGoodJob ? 'opacity-100' : 'opacity-0 z-[-10]'}`}>
-                Good Job!
+                Great Job!
             </div>
 
         </Container>

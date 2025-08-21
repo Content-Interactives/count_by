@@ -13,6 +13,26 @@
     }
 }
 
+@keyframes frogJump {
+    0% {
+        left: var(--start-x);
+        transform: translateX(-50%) translateY(0px);
+    }
+    50% {
+        left: calc(var(--start-x) + (var(--end-x) - var(--start-x)) * 0.5);
+        transform: translateX(-50%) translateY(-60px);
+        rotate: 10deg;
+    }
+    100% {
+        left: var(--end-x);
+        transform: translateX(-50%) translateY(0px);
+    }
+}
+
 .shake-animation {
     animation: shakeAnimation 0.2s ease-in-out forwards;
+}
+
+.frog-jump-animation {
+    animation: frogJump 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
 }
