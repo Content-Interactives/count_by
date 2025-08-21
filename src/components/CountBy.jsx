@@ -46,6 +46,43 @@ const CountBy = () => {
     // Refs for lilypad positions
     const lilypadRefs = useRef([]);
 
+    // Hover detection system
+    useEffect(() => {
+        function watchForHover() {
+            // lastTouchTime is used for ignoring emulated mousemove events
+            let lastTouchTime = 0
+
+            function enableHover() {
+                if (new Date() - lastTouchTime < 500) return
+                document.body.classList.add('hasHover')
+            }
+
+            function disableHover() {
+                document.body.classList.remove('hasHover')
+            }
+
+            function updateLastTouchTime() {
+                lastTouchTime = new Date()
+            }
+
+            document.addEventListener('touchstart', updateLastTouchTime, true)
+            document.addEventListener('touchstart', disableHover, true)
+            document.addEventListener('mousemove', enableHover, true)
+
+            enableHover()
+
+            // Return cleanup function
+            return () => {
+                document.removeEventListener('touchstart', updateLastTouchTime, true)
+                document.removeEventListener('touchstart', disableHover, true)
+                document.removeEventListener('mousemove', enableHover, true)
+            }
+        }
+
+        const cleanup = watchForHover();
+        return cleanup;
+    }, []);
+
     // Helper function to calculate frog position for a given lilypad
     const calculateFrogPosition = (targetPosition) => {
         if (lilypadRefs.current[targetPosition]) {
@@ -276,9 +313,7 @@ const CountBy = () => {
 
             {/* Buttons and Count */}
             <div className={`absolute bottom-[14%] w-[100%] flex justify-center items-center gap-3 transition-opacity duration-300 ${showCountAndButtons ? 'opacity-100' : 'opacity-0'}`}>
-                <button className={`w-[30%] h-[80px] ml-5 bg-green-200 border border-green-500 border-2 rounded-lg text-3xl font-extrabold text-green-700 flex justify-center items-center ${
-                    shakingButtonIndex === null ? 'hover:bg-green-300 hover:scale-105 hover:shadow-lg transition-all duration-200 active:scale-95' : ''
-                } ${
+                <button className={`count-by-button w-[30%] h-[80px] ml-5 bg-green-200 border border-green-500 border-2 rounded-lg text-3xl font-extrabold text-green-700 flex justify-center items-center transition-all duration-200 ${
                     buttonsAnimating === 'fading-out' ? 'fade-out-up-animation' : 
                     buttonsAnimating === 'fading-in' ? 'fade-in-up-animation' : ''
                 } ${shakingButtonIndex === 0 ? 'shake-animation' : ''}`}
@@ -287,9 +322,7 @@ const CountBy = () => {
                 >
                     {buttonValues[0]}
                 </button>
-                <button className={`w-[30%] h-[80px] bg-green-200 border border-green-500 border-2 rounded-lg text-3xl font-extrabold text-green-700 flex justify-center items-center ${
-                    shakingButtonIndex === null ? 'hover:bg-green-300 hover:scale-105 hover:shadow-lg transition-all duration-200 active:scale-95' : ''
-                } ${
+                <button className={`count-by-button w-[30%] h-[80px] bg-green-200 border border-green-500 border-2 rounded-lg text-3xl font-extrabold text-green-700 flex justify-center items-center transition-all duration-200 ${
                     buttonsAnimating === 'fading-out' ? 'fade-out-up-animation' : 
                     buttonsAnimating === 'fading-in' ? 'fade-in-up-animation' : ''
                 } ${shakingButtonIndex === 1 ? 'shake-animation' : ''}`}
@@ -298,9 +331,7 @@ const CountBy = () => {
                 >
                     {buttonValues[1]}
                 </button>
-                <button className={`w-[30%] h-[80px] mr-5 bg-green-200 border border-green-500 border-2 rounded-lg text-3xl font-extrabold text-green-700 flex justify-center items-center ${
-                    shakingButtonIndex === null ? 'hover:bg-green-300 hover:scale-105 hover:shadow-lg transition-all duration-200 active:scale-95' : ''
-                } ${
+                <button className={`count-by-button w-[30%] h-[80px] mr-5 bg-green-200 border border-green-500 border-2 rounded-lg text-3xl font-extrabold text-green-700 flex justify-center items-center transition-all duration-200 ${
                     buttonsAnimating === 'fading-out' ? 'fade-out-up-animation' : 
                     buttonsAnimating === 'fading-in' ? 'fade-in-up-animation' : ''
                 } ${shakingButtonIndex === 2 ? 'shake-animation' : ''}`}

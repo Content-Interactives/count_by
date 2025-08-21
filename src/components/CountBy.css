@@ -36,3 +36,17 @@
 .frog-jump-animation {
     animation: frogJump 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
 }
+
+/* CSS-only hover detection - more reliable backup */
+/* Only apply hover effects on devices that can actually hover */
+@media (hover: hover) {
+    .count-by-button:hover {
+        background-color: rgb(187 247 208); /* green-300 */
+        transform: scale(1.05);
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); /* shadow-lg */
+    }
+    
+    .count-by-button:active {
+        transform: scale(0.95);
+    }
+}
