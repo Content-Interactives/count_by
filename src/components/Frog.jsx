@@ -1,6 +1,7 @@
 import React from 'react';
+import './Frog.css';
 
-const Frog = () => {
+const Frog = ({ isJumping = false }) => {
   return (
     // Body
     <div
@@ -110,25 +111,31 @@ const Frog = () => {
         </div>
 
         {/* Left Leg */}
-        <div style={{
-            width: '20px',
-            height: '6px',
-            backgroundColor: '#22c55e',
-            borderRadius: '3px',
-            position: 'absolute',
-            transform: 'translate(-6px, 45px) rotate(-10deg)',
-            zIndex: '5',
-        }}></div>
+        <div 
+            className={isJumping ? 'left-leg-animation' : ''}
+            style={{
+                width: '20px',
+                height: '6px',
+                backgroundColor: '#22c55e',
+                borderRadius: '3px',
+                position: 'absolute',
+                ...(!isJumping && { transform: 'translate(-6px, 45px) rotate(-10deg)' }),
+                zIndex: '5',
+            }}
+        ></div>
         {/* Right Leg */}
-        <div style={{
-            width: '20px',
-            height: '6px',
-            backgroundColor: '#22c55e',
-            borderRadius: '3px',
-            position: 'absolute',
-            transform: 'translate(38px, 43px) rotate(10deg)',
-            zIndex: '1',
-        }}></div>
+        <div 
+            className={isJumping ? 'right-leg-animation' : ''}
+            style={{
+                width: '20px',
+                height: '6px',
+                backgroundColor: '#22c55e',
+                borderRadius: '3px',
+                position: 'absolute',
+                ...(!isJumping && { transform: 'translate(38px, 43px) rotate(10deg)' }),
+                zIndex: '1',
+            }}
+        ></div>
     </div>
   );
 };

@@ -270,7 +270,7 @@ const CountBy = () => {
                         '--end-x': `${frogLeft}px`
                     }}
                 >
-                    <Frog />
+                    <Frog isJumping={isJumping} />
                 </div>
 
                 <div 
