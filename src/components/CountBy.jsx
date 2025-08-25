@@ -21,18 +21,24 @@ const CountBy = () => {
         }
         return newLilypads;
     };
-
-    // Generate initial values
-    const initialLilypads = generateLilypadValues(5);
+    
+    // Create a shuffled cycle of counts [2, 5, 10, 100]
+    const createShuffledSequence = () => {
+        const options = [2, 5, 10, 100];
+        return options.sort(() => Math.random() - 0.5);
+    };
 
     // State Management
-    const [count, setCount] = useState(5);
+    const [countSequence, setCountSequence] = useState(createShuffledSequence);
+    const [countIndex, setCountIndex] = useState(0);
+    const [count, setCount] = useState(() => countSequence[0]);
+    const initialLilypads = generateLilypadValues(countSequence[0]);
     const [lilypads, setLilypads] = useState(initialLilypads);
     const [frogPosition, setFrogPosition] = useState(0);
     const [buttonValues, setButtonValues] = useState(() => {
-        const correctAnswer = initialLilypads[0] + 5;
-        const incorrectValue1 = correctAnswer + 5;
-        const incorrectValue2 = correctAnswer - 5;
+        const correctAnswer = initialLilypads[0] + countSequence[0];
+        const incorrectValue1 = correctAnswer + countSequence[0];
+        const incorrectValue2 = correctAnswer - countSequence[0];
         const allValues = [correctAnswer, incorrectValue1, incorrectValue2];
         return allValues.sort(() => Math.random() - 0.5);
     });
@@ -168,7 +174,7 @@ const CountBy = () => {
                         });
                     }, 300); // Small delay for fade out to complete
                     
-                    // Reset and randomize after 3 seconds
+                    // Reset and advance cycle after 3 seconds
                     setTimeout(() => {
                         // Fade out good job message
                         setShowGoodJob(false);
@@ -176,9 +182,18 @@ const CountBy = () => {
                         // Reset frog position
                         setFrogPosition(0);
                         
-                        // Randomize count (2, 5, or 10)
-                        const countOptions = [2, 5, 10, 100];
-                        const newCount = countOptions[Math.floor(Math.random() * countOptions.length)];
+                        // Advance to next count in the shuffled cycle; reshuffle at end
+                        let nextIndex = countIndex + 1;
+                        let nextSequence = countSequence;
+                        if (nextIndex >= countSequence.length) {
+                            nextSequence = createShuffledSequence();
+                            nextIndex = 0;
+                            setCountSequence(nextSequence);
+                            setCountIndex(0);
+                        } else {
+                            setCountIndex(nextIndex);
+                        }
+                        const newCount = nextSequence[nextIndex];
                         setCount(newCount);
                         
                         // Generate new lilypad values based on new count
